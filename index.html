@@ -1,0 +1,1246 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <meta name="theme-color" content="#db4c3f" />
+    <link rel="apple-touch-icon" href="icon-192.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Daily Planner</title>
+    <style>
+      :root {
+        --bg: #fff;
+        --card: #fff;
+        --side: #fafafa;
+        --line: #ebebeb;
+        --sel: #f0f0f0;
+        --ink: #202020;
+        --mute: #808080;
+        --acc: #db4c3f;
+        --good: #2f9e5b;
+        --star: #eb8909;
+        --bad: #d1453b;
+        box-sizing: border-box;
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --bg: #191919;
+          --card: #242424;
+          --side: #202020;
+          --line: #333;
+          --sel: #2c2c2c;
+          --ink: #ececec;
+          --mute: #999;
+          --acc: #ff6b5a;
+          --good: #4cc27f;
+          --bad: #ef6b6b;
+        }
+      }
+      :root[data-theme="dark"] {
+        --bg: #191919;
+        --card: #242424;
+        --side: #202020;
+        --line: #333;
+        --sel: #2c2c2c;
+        --ink: #ececec;
+        --mute: #999;
+        --acc: #ff6b5a;
+        --good: #4cc27f;
+        --bad: #ef6b6b;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-padding-top: env(safe-area-inset-top, 0px);
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font:
+          15px/1.45 -apple-system,
+          "Segoe UI",
+          Roboto,
+          system-ui,
+          sans-serif;
+      }
+      button {
+        font: inherit;
+        cursor: pointer;
+        color: inherit;
+      }
+      :focus-visible {
+        outline: 2px solid var(--acc);
+        outline-offset: 2px;
+      }
+      .app {
+        display: grid;
+        grid-template-columns: 250px minmax(0, 1fr);
+        min-height: 100vh;
+      }
+      .side {
+        background: var(--side);
+        border-right: 1px solid var(--line);
+        padding: 18px 12px;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        align-self: start;
+      }
+      .brand {
+        font-weight: 800;
+        font-size: 18px;
+        padding: 4px 10px 14px;
+      }
+      .newbtn {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        width: 100%;
+        background: none;
+        border: 0;
+        color: var(--acc);
+        font-weight: 600;
+        padding: 9px 10px;
+        border-radius: 8px;
+        margin-bottom: 6px;
+      }
+      .newbtn:hover,
+      .nv:hover {
+        background: var(--sel);
+      }
+      .nv {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        padding: 8px 10px;
+        border: 0;
+        background: none;
+        border-radius: 8px;
+        text-align: left;
+      }
+      .nv[aria-current="page"] {
+        background: var(--sel);
+        color: var(--acc);
+        font-weight: 600;
+      }
+      .nv svg {
+        width: 20px;
+        height: 20px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .cnt {
+        margin-left: auto;
+        color: var(--mute);
+        font-size: 12px;
+      }
+      #main {
+        max-width: 720px;
+        width: 100%;
+        margin: 0 auto;
+        padding: 36px 28px 90px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 26px;
+        font-weight: 800;
+      }
+      h2 {
+        font-size: 14px;
+        font-weight: 700;
+        margin: 22px 0 4px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid var(--line);
+      }
+      h2.late {
+        color: var(--bad);
+      }
+      .sub {
+        color: var(--mute);
+        margin: 2px 0 14px;
+        font-size: 13px;
+      }
+      .bar {
+        height: 5px;
+        background: var(--line);
+        border-radius: 3px;
+        overflow: hidden;
+      }
+      .bar i {
+        display: block;
+        height: 100%;
+        width: 0;
+        background: var(--good);
+        transition: width 0.3s;
+      }
+      .count {
+        color: var(--mute);
+        font-size: 13px;
+        margin: 6px 0 10px;
+      }
+      .task {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        padding: 10px 4px;
+        border-bottom: 1px solid var(--line);
+      }
+      .p1 {
+        --pc: #d1453b;
+      }
+      .p2 {
+        --pc: #eb8909;
+      }
+      .p3 {
+        --pc: #246fe0;
+      }
+      .p4 {
+        --pc: #8a8a8a;
+      }
+      .chk {
+        width: 20px;
+        height: 20px;
+        margin-top: 2px;
+        flex: none;
+        border-radius: 50%;
+        border: 2px solid var(--pc);
+        background: color-mix(in srgb, var(--pc) 12%, transparent);
+        padding: 0;
+        display: grid;
+        place-items: center;
+        font-size: 12px;
+        line-height: 1;
+        color: transparent;
+      }
+      .chk:hover {
+        color: var(--pc);
+      }
+      .done .chk {
+        background: var(--mute);
+        border-color: var(--mute);
+        color: #fff;
+      }
+      .body {
+        flex: 1;
+        min-width: 0;
+        cursor: pointer;
+      }
+      .tt {
+        overflow-wrap: anywhere;
+      }
+      .done .tt {
+        color: var(--mute);
+        text-decoration: line-through;
+      }
+      .meta {
+        font-size: 12px;
+        color: var(--mute);
+      }
+      .meta.late {
+        color: var(--bad);
+      }
+      .ic {
+        background: none;
+        border: 0;
+        color: var(--mute);
+        font-size: 18px;
+        padding: 0 6px;
+        opacity: 0;
+      }
+      .task:hover .ic,
+      .task:focus-within .ic {
+        opacity: 1;
+      }
+      @media (hover: none) {
+        .ic {
+          opacity: 1;
+        }
+      }
+      .mv {
+        border: 1px solid var(--line);
+        background: none;
+        color: var(--acc);
+        border-radius: 14px;
+        padding: 2px 10px;
+        font-size: 12px;
+      }
+      .addrow {
+        display: block;
+        width: 100%;
+        text-align: left;
+        background: none;
+        border: 0;
+        color: var(--mute);
+        padding: 10px 4px;
+      }
+      .addrow:hover {
+        color: var(--acc);
+      }
+      .form {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 10px 12px;
+        margin: 8px 0;
+        background: var(--card);
+      }
+      .ft {
+        width: 100%;
+        border: 0;
+        background: none;
+        color: var(--ink);
+        font: inherit;
+        font-weight: 600;
+        padding: 6px 0;
+        outline: none;
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 8px 0;
+      }
+      .chip {
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--bg);
+        color: var(--ink);
+        padding: 5px 8px;
+        font: inherit;
+        font-size: 13px;
+      }
+      .frow {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        border-top: 1px solid var(--line);
+        padding-top: 10px;
+      }
+      .btn {
+        border: 0;
+        border-radius: 6px;
+        padding: 8px 14px;
+        font-weight: 600;
+      }
+      .btn.pri {
+        background: var(--acc);
+        color: #fff;
+      }
+      .btn.ghost {
+        background: var(--sel);
+      }
+      .empty {
+        color: var(--mute);
+        text-align: center;
+        padding: 30px 0;
+        font-size: 14px;
+      }
+      .seg {
+        display: inline-flex;
+        background: var(--sel);
+        border-radius: 8px;
+        padding: 3px;
+        margin-bottom: 14px;
+      }
+      .seg button {
+        border: 0;
+        background: none;
+        padding: 6px 16px;
+        border-radius: 6px;
+        color: var(--mute);
+      }
+      .seg .on {
+        background: var(--card);
+        color: var(--ink);
+        font-weight: 600;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+      }
+      .nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+      }
+      .navb {
+        border: 1px solid var(--line);
+        background: none;
+        border-radius: 8px;
+        width: 36px;
+        height: 34px;
+      }
+      .navb:disabled {
+        opacity: 0.35;
+        cursor: default;
+      }
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 16px;
+        margin-bottom: 14px;
+        background: var(--card);
+      }
+      .verdict {
+        font-size: 19px;
+        font-weight: 800;
+        margin: 0 0 4px;
+      }
+      .chart {
+        display: flex;
+        gap: 8px;
+        align-items: flex-end;
+        height: 150px;
+      }
+      .col {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+        height: 100%;
+        font-size: 12px;
+        color: var(--mute);
+      }
+      .col .b {
+        width: 100%;
+        border-radius: 6px 6px 0 0;
+        min-height: 3px;
+        margin: 3px 0;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 5px;
+      }
+      .grid div {
+        aspect-ratio: 1;
+        border-radius: 7px;
+        display: grid;
+        place-items: center;
+        font-size: 12px;
+        background: var(--sel);
+        color: var(--mute);
+      }
+      .grid .hd {
+        background: none;
+        aspect-ratio: auto;
+        font-size: 11px;
+      }
+      .grid .tod {
+        outline: 2px solid var(--ink);
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+      .stats p {
+        margin: 0;
+        font-size: 13px;
+        color: var(--mute);
+      }
+      .stats strong {
+        display: block;
+        font-size: 21px;
+        color: var(--ink);
+      }
+      .hab {
+        display: flex;
+        justify-content: space-between;
+        font-size: 14px;
+        margin-top: 10px;
+      }
+      .hab + .bar {
+        margin-top: 4px;
+      }
+      .foot {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 30px;
+        font-size: 12px;
+        color: var(--mute);
+      }
+      .foot button {
+        background: none;
+        border: 0;
+        color: var(--mute);
+        text-decoration: underline;
+      }
+      .fab {
+        display: none;
+      }
+      @media (max-width: 760px) {
+        .app {
+          display: block;
+        }
+        .side {
+          position: fixed;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          top: auto;
+          height: auto;
+          z-index: 5;
+          border-right: 0;
+          border-top: 1px solid var(--line);
+          padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+        }
+        .brand,
+        .newbtn,
+        .cnt {
+          display: none;
+        }
+        #nav {
+          display: flex;
+        }
+        .nv {
+          flex-direction: column;
+          gap: 2px;
+          font-size: 11px;
+          padding: 6px 2px;
+          align-items: center;
+          justify-content: center;
+          flex: 1;
+        }
+        #main {
+          padding: 22px 16px 120px;
+        }
+        .fab {
+          display: grid;
+          place-items: center;
+          position: fixed;
+          right: 18px;
+          bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+          width: 54px;
+          height: 54px;
+          border-radius: 50%;
+          background: var(--acc);
+          color: #fff;
+          border: 0;
+          font-size: 28px;
+          z-index: 6;
+          box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .bar i {
+          transition: none;
+        }
+      }
+      [hidden] {
+        display: none !important;
+      }
+      .auth {
+        max-width: 360px;
+        margin: 12vh auto;
+        padding: 0 20px;
+      }
+      .auth p {
+        color: var(--mute);
+        margin: 4px 0 16px;
+      }
+      .ain {
+        width: 100%;
+        padding: 11px 12px;
+        margin: 6px 0;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--card);
+        color: var(--ink);
+        font: inherit;
+      }
+      .arow {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .arow .btn {
+        flex: 1;
+      }
+      .amsg {
+        color: var(--bad);
+        font-size: 13px;
+        min-height: 20px;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app" id="app">
+      <aside class="side">
+        <div class="brand">Daily Planner</div>
+        <button class="newbtn" id="newBtn"><span aria-hidden="true">＋</span> Add task</button>
+        <nav id="nav"></nav>
+      </aside>
+      <main id="main">
+        <div id="view"></div>
+        <div class="foot">
+          <span id="sync"></span
+          ><span><button id="theme">Switch theme</button> &nbsp; <button id="out">Sign out</button></span>
+        </div>
+      </main>
+    </div>
+    <button class="fab" id="fab" aria-label="Add task">＋</button>
+    <section class="auth" id="auth" hidden>
+      <h1>Daily Planner</h1>
+      <p>Sign in to see your tasks on any device.</p>
+      <input class="ain" id="em" type="email" placeholder="Email" autocomplete="email" aria-label="Email" />
+      <input
+        class="ain"
+        id="pw"
+        type="password"
+        placeholder="Password (6+ characters)"
+        autocomplete="current-password"
+        aria-label="Password"
+      />
+      <div class="arow">
+        <button class="btn pri" id="signin">Sign in</button
+        ><button class="btn ghost" id="signup">Create account</button>
+      </div>
+      <div class="amsg" id="amsg" role="alert"></div>
+    </section>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+      const SUPABASE_URL = "https://ycrwcoockbkjwoblqaxt.supabase.co";
+      const SUPABASE_KEY = "sb_publishable_e4gNUXM6ErPfeLmxgN42LQ_fMbnS6c-";
+      const K = "planner-v2",
+        $ = (id) => document.getElementById(id);
+      const pad = (n) => String(n).padStart(2, "0"),
+        ds = (d) => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+      const parse = (s) => {
+        const [a, b, c] = s.split("-");
+        return new Date(+a, +b - 1, +c);
+      };
+      const addD = (s, n) => {
+        const d = parse(s);
+        d.setDate(d.getDate() + n);
+        return ds(d);
+      };
+      const todayS = () => ds(new Date());
+      const h = (tag, cls, txt, kids) => {
+        const e = document.createElement(tag);
+        if (cls) e.className = cls;
+        if (txt != null) e.textContent = txt;
+        (kids || []).forEach((k) => e.appendChild(k));
+        return e;
+      };
+      let S = { items: [], log: {} },
+        view = "today",
+        mode = "week",
+        off = 0,
+        openForm = null,
+        doc = null,
+        status = "This device only",
+        writing = false,
+        again = false;
+      const norm = () =>
+        S.items.forEach((t) => {
+          if (!t.pri) t.pri = t.star ? 1 : 4;
+        });
+      try {
+        const l = JSON.parse(localStorage.getItem(K) || "null");
+        if (l && l.items) S = { items: l.items, log: l.log || {} };
+      } catch (e) {}
+      norm();
+      const OK = 0.8,
+        col = (p) => (p >= OK ? "var(--good)" : p >= 0.5 ? "var(--star)" : "var(--bad)");
+      function planned(d) {
+        return S.items.filter((t) => (t.type === "daily" ? t.from <= d && (!t.end || t.end > d) : t.day === d));
+      }
+      function doneSet(d) {
+        return new Set(S.log[d] || []);
+      }
+      function stat(d) {
+        const p = planned(d),
+          s = doneSet(d),
+          n = p.filter((t) => s.has(t.id)).length;
+        return { p: p.length, n, pct: p.length ? n / p.length : null };
+      }
+      function streak() {
+        let d = todayS(),
+          n = 0;
+        if (!(stat(d).pct >= OK)) d = addD(d, -1);
+        for (let i = 0; i < 400; i++) {
+          const s = stat(d);
+          if (s.pct != null && s.pct >= OK) {
+            n++;
+            d = addD(d, -1);
+          } else break;
+        }
+        return n;
+      }
+      function label(d) {
+        const t = todayS();
+        if (d === t) return "Today";
+        if (d === addD(t, 1)) return "Tomorrow";
+        if (d === addD(t, -1)) return "Yesterday";
+        return parse(d).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
+      }
+
+      let sb = null,
+        user = null,
+        dirty = localStorage.getItem(K + "-dirty") === "1";
+      async function push() {
+        if (!sb || !user) return;
+        if (writing) {
+          again = true;
+          return;
+        }
+        writing = true;
+        try {
+          const { error } = await sb.from("planner").upsert({
+            user_id: user.id,
+            data: JSON.parse(JSON.stringify(S)),
+            updated_at: new Date().toISOString(),
+          });
+          if (error) throw error;
+          dirty = false;
+          try {
+            localStorage.removeItem(K + "-dirty");
+          } catch (e) {}
+          status = "Synced across devices";
+        } catch (e) {
+          status = "Offline. Saved on this device";
+        }
+        writing = false;
+        if (again) {
+          again = false;
+          push();
+        } else refresh();
+      }
+      async function pull() {
+        if (!sb || !user || writing || again || openForm) return;
+        try {
+          if (dirty) {
+            await push();
+            return;
+          }
+          const { data, error } = await sb.from("planner").select("data").eq("user_id", user.id).maybeSingle();
+          if (error) throw error;
+          if (data && data.data && data.data.items) {
+            S = { items: data.data.items, log: data.data.log || {} };
+            norm();
+            try {
+              localStorage.setItem(K, JSON.stringify(S));
+            } catch (e) {}
+            status = "Synced across devices";
+          } else await push();
+        } catch (e) {
+          status = "Offline. Saved on this device";
+        }
+        refresh();
+      }
+      function save() {
+        dirty = true;
+        try {
+          localStorage.setItem(K, JSON.stringify(S));
+          localStorage.setItem(K + "-dirty", "1");
+        } catch (e) {}
+        push();
+      }
+      function refresh() {
+        if (openForm) $("sync").textContent = status;
+        else render();
+      }
+      function toggle(t, d) {
+        const a = S.log[d] || (S.log[d] = []),
+          i = a.indexOf(t.id);
+        i < 0 ? a.push(t.id) : a.splice(i, 1);
+        save();
+        render();
+      }
+      function del(t) {
+        if (t.type === "daily" && t.from < todayS()) t.end = todayS();
+        else S.items = S.items.filter((k) => k !== t);
+        save();
+        render();
+      }
+      const sortT = (l, d) =>
+        l.slice().sort((a, b) => doneSet(d).has(a.id) - doneSet(d).has(b.id) || a.pri - b.pri || a.id - b.id);
+
+      function form(spec) {
+        const t = spec.t;
+        const f = h("div", "form"),
+          tx = h("input", "ft");
+        tx.id = "ftext";
+        tx.placeholder = "Task name";
+        tx.maxLength = 200;
+        tx.value = t ? t.text : "";
+        const dt = h("input", "chip");
+        dt.type = "date";
+        dt.value = t ? (t.type === "daily" ? t.from : t.day) : spec.date;
+        dt.setAttribute("aria-label", "Date");
+        const rp = h("select", "chip");
+        rp.setAttribute("aria-label", "Repeat");
+        [
+          ["once", "Doesn't repeat"],
+          ["daily", "Every day"],
+        ].forEach(([v, l]) => {
+          const o = h("option", null, l);
+          o.value = v;
+          rp.appendChild(o);
+        });
+        rp.value = t ? t.type : "once";
+        const pr = h("select", "chip");
+        pr.setAttribute("aria-label", "Priority");
+        [1, 2, 3, 4].forEach((n) => {
+          const o = h("option", null, "Priority " + n);
+          o.value = n;
+          pr.appendChild(o);
+        });
+        pr.value = t ? t.pri : 4;
+        const close = () => {
+          openForm = null;
+          render();
+        };
+        const submit = () => {
+          const v = tx.value.trim();
+          if (!v || !dt.value) return;
+          const type = rp.value,
+            o = t || { id: Date.now() };
+          o.text = v;
+          o.pri = +pr.value;
+          if (!t || o.type !== type) {
+            delete o.day;
+            delete o.from;
+            delete o.end;
+            o.type = type;
+          }
+          type === "daily" ? (o.from = dt.value) : (o.day = dt.value);
+          if (!t) S.items.push(o);
+          openForm = null;
+          save();
+          render();
+        };
+        const cancel = h("button", "btn ghost", "Cancel"),
+          ok = h("button", "btn pri", t ? "Save" : "Add task");
+        cancel.onclick = close;
+        ok.onclick = submit;
+        tx.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") submit();
+          if (e.key === "Escape") close();
+        });
+        f.append(tx, h("div", "chips", null, [dt, rp, pr]), h("div", "frow", null, [cancel, ok]));
+        return f;
+      }
+      const adder = (d) => {
+        if (openForm && !openForm.t && openForm.date === d) return form(openForm);
+        const b = h("button", "addrow", "＋  Add task");
+        b.onclick = () => {
+          openForm = { date: d };
+          render();
+        };
+        return b;
+      };
+
+      function row(t, d, extra) {
+        if (openForm && openForm.t === t) return form(openForm);
+        const done = doneSet(d).has(t.id),
+          r = h("div", "task" + (done ? " done" : ""));
+        const c = h("button", "chk p" + t.pri, "✓");
+        c.setAttribute("aria-label", done ? "Mark as not done" : "Complete task");
+        c.onclick = () => toggle(t, d);
+        const body = h("div", "body", null, [h("div", "tt", t.text)]);
+        if (t.type === "daily") body.appendChild(h("div", "meta", "↻ Every day"));
+        else if (t.day < todayS() && !done) body.appendChild(h("div", "meta late", label(t.day)));
+        body.onclick = () => {
+          openForm = { t };
+          render();
+        };
+        const x = h("button", "ic", "×");
+        x.setAttribute("aria-label", "Delete task");
+        x.onclick = () => del(t);
+        r.append(c, body);
+        if (extra) r.appendChild(extra);
+        r.appendChild(x);
+        return r;
+      }
+      const head = (t, s) => h("div", null, null, [h("h1", null, t), h("p", "sub", s)]);
+
+      function vToday(m) {
+        const d = todayS(),
+          p = planned(d),
+          s = stat(d);
+        m.appendChild(
+          head("Today", new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" }))
+        );
+        const bar = h("div", "bar", null, [h("i")]);
+        bar.firstChild.style.width = s.p ? (s.n / s.p) * 100 + "%" : "0";
+        m.append(bar, h("p", "count", s.p ? s.n + " of " + s.p + " done" : "Nothing planned yet"));
+        const od = S.items
+          .filter(
+            (t) => t.type === "once" && t.day < d && !t.moved && !doneSet(t.day).has(t.id) && t.day >= addD(d, -30)
+          )
+          .sort((a, b) => (a.day < b.day ? -1 : 1));
+        if (od.length) {
+          m.appendChild(h("h2", "late", "Overdue"));
+          od.forEach((t) => {
+            const b = h("button", "mv", "Reschedule");
+            b.onclick = (e) => {
+              e.stopPropagation();
+              t.moved = 1;
+              S.items.push({ id: Date.now(), text: t.text, type: "once", pri: t.pri, day: d });
+              save();
+              render();
+            };
+            m.appendChild(row(t, t.day, b));
+          });
+          if (p.length) m.appendChild(h("h2", null, "Today"));
+        }
+        sortT(p, d).forEach((t) => m.appendChild(row(t, d)));
+        m.appendChild(adder(d));
+        if (!p.length && !od.length && !openForm)
+          m.appendChild(h("p", "empty", "All clear. Add a task, or choose Every day to build a routine."));
+      }
+
+      function vUpcoming(m) {
+        const t = todayS();
+        m.appendChild(head("Upcoming", "Next 7 days"));
+        for (let i = 1; i <= 7; i++) {
+          const d = addD(t, i);
+          m.appendChild(
+            h(
+              "h2",
+              null,
+              i === 1
+                ? "Tomorrow · " + parse(d).toLocaleDateString(undefined, { day: "numeric", month: "short" })
+                : label(d)
+            )
+          );
+          sortT(
+            planned(d).filter((x) => x.type === "once" || x.from === d),
+            d
+          ).forEach((x) => m.appendChild(row(x, d)));
+          m.appendChild(adder(d));
+        }
+        m.appendChild(h("p", "empty", "Every-day tasks repeat automatically and are not listed here."));
+      }
+
+      function vDone(m) {
+        const t = todayS();
+        m.appendChild(head("Completed", "Last 14 days"));
+        let any = 0;
+        for (let i = 0; i < 14; i++) {
+          const d = addD(t, -i),
+            ids = doneSet(d),
+            l = planned(d).filter((x) => ids.has(x.id));
+          if (!l.length) continue;
+          any = 1;
+          m.appendChild(h("h2", null, label(d) + " · " + l.length));
+          l.forEach((x) => m.appendChild(row(x, d)));
+        }
+        if (!any) m.appendChild(h("p", "empty", "Nothing completed yet."));
+      }
+
+      function range() {
+        const t = todayS();
+        if (mode === "week") {
+          const mon = addD(t, -((parse(t).getDay() + 6) % 7) + off * 7),
+            days = [...Array(7)].map((_, i) => addD(mon, i));
+          const f = (x) => parse(x).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+          return { days, title: f(days[0]) + " to " + f(days[6]) };
+        }
+        const m = new Date();
+        m.setDate(1);
+        m.setMonth(m.getMonth() + off);
+        const n = new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate();
+        return {
+          days: [...Array(n)].map((_, i) => ds(new Date(m.getFullYear(), m.getMonth(), i + 1))),
+          title: m.toLocaleDateString(undefined, { month: "long", year: "numeric" }),
+        };
+      }
+
+      function vInsights(m) {
+        const { days, title } = range(),
+          t = todayS();
+        m.appendChild(head("Insights", "Did you follow your plan?"));
+        const seg = h("div", "seg");
+        [
+          ["week", "Week"],
+          ["month", "Month"],
+        ].forEach(([k, l]) => {
+          const b = h("button", mode === k ? "on" : "", l);
+          b.onclick = () => {
+            mode = k;
+            off = 0;
+            render();
+          };
+          seg.appendChild(b);
+        });
+        const pv = h("button", "navb", "‹"),
+          nx = h("button", "navb", "›");
+        pv.onclick = () => {
+          off--;
+          render();
+        };
+        nx.onclick = () => {
+          off++;
+          render();
+        };
+        nx.disabled = off >= 0;
+        pv.setAttribute("aria-label", "Previous");
+        nx.setAttribute("aria-label", "Next");
+        m.append(seg, h("div", "nav", null, [pv, h("b", null, title), nx]));
+        const past = days.filter((d) => d <= t),
+          rec = past.map((d) => ({ d, ...stat(d) })).filter((r) => r.p > 0);
+        const foll = rec.filter((r) => r.pct >= OK).length,
+          avg = rec.length ? rec.reduce((a, r) => a + r.pct, 0) / rec.length : 0;
+        const best = rec.slice().sort((a, b) => b.pct - a.pct)[0],
+          ended = days[days.length - 1] < t;
+        const v = !rec.length
+          ? "No plan recorded yet"
+          : avg >= OK
+            ? "You followed your plan"
+            : avg >= 0.5
+              ? "You partly followed your plan"
+              : "You mostly missed your plan";
+        m.appendChild(
+          h("div", "card", null, [
+            h("p", "verdict", v),
+            h(
+              "p",
+              "sub",
+              rec.length
+                ? "Followed on " +
+                    foll +
+                    " of " +
+                    rec.length +
+                    " planned days" +
+                    (ended ? "" : " so far") +
+                    ". A day counts when you finish at least 80% of it."
+                : "Add tasks on the Today tab and tick them off to see your review."
+            ),
+          ])
+        );
+        const chart = h("div", "card");
+        if (mode === "week") {
+          const c = h("div", "chart");
+          days.forEach((d) => {
+            const s = stat(d),
+              f = d > t || s.pct == null,
+              b = h("div", "b");
+            b.style.height = f ? "3px" : Math.max(s.pct * 100, 2) + "%";
+            b.style.background = f ? "var(--line)" : col(s.pct);
+            c.appendChild(
+              h("div", "col", null, [
+                h("span", null, f ? "" : Math.round(s.pct * 100) + "%"),
+                b,
+                h("span", null, parse(d).toLocaleDateString(undefined, { weekday: "short" })),
+              ])
+            );
+          });
+          chart.appendChild(c);
+        } else {
+          const g = h("div", "grid");
+          ["M", "T", "W", "T", "F", "S", "S"].forEach((x) => g.appendChild(h("div", "hd", x)));
+          for (let i = 0; i < (parse(days[0]).getDay() + 6) % 7; i++) g.appendChild(h("div", "hd"));
+          days.forEach((d) => {
+            const s = stat(d),
+              c = h("div", d === t ? "tod" : "", String(+d.slice(8)));
+            if (d <= t && s.pct != null) {
+              c.style.background =
+                "color-mix(in srgb, " + col(s.pct) + " " + Math.round(25 + s.pct * 70) + "%, var(--card))";
+              c.style.color = "var(--ink)";
+            }
+            g.appendChild(c);
+          });
+          chart.append(g, h("p", "sub", "Green: 80%+ done. Amber: 50 to 79%. Red: under 50%. Grey: nothing planned."));
+        }
+        m.appendChild(chart);
+        const g = h("div", "stats"),
+          sk = streak();
+        [
+          ["Average done", Math.round(avg * 100) + "%"],
+          ["Days followed", foll + "/" + rec.length],
+          [
+            "Best day",
+            best
+              ? parse(best.d).toLocaleDateString(undefined, { weekday: "short", day: "numeric" }) +
+                " (" +
+                Math.round(best.pct * 100) +
+                "%)"
+              : "None",
+          ],
+          ["Current streak", sk + (sk === 1 ? " day" : " days")],
+        ].forEach(([a, b]) => g.appendChild(h("p", null, a, [h("strong", null, b)])));
+        m.appendChild(h("div", "card", null, [g]));
+        const hab = S.items
+          .filter((x) => x.type === "daily")
+          .map((x) => {
+            let p = 0,
+              n = 0;
+            past.forEach((d) => {
+              if (planned(d).includes(x)) {
+                p++;
+                if (doneSet(d).has(x.id)) n++;
+              }
+            });
+            return { x, p, n };
+          })
+          .filter((r) => r.p > 0)
+          .sort((a, b) => a.n / a.p - b.n / b.p);
+        if (hab.length) {
+          const hc = h("div", "card", null, [h("p", "verdict", "Every-day tasks")]);
+          hc.firstChild.style.fontSize = "16px";
+          hab.forEach((r) => {
+            const pc = r.n / r.p,
+              bar = h("div", "bar", null, [h("i")]);
+            bar.firstChild.style.width = pc * 100 + "%";
+            bar.firstChild.style.background = col(pc);
+            hc.append(h("div", "hab", null, [h("span", null, r.x.text), h("span", null, r.n + "/" + r.p)]), bar);
+          });
+          m.appendChild(hc);
+        }
+      }
+
+      const ICON = {
+        today:
+          '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+        upcoming:
+          '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4M8 15h.01M12 15h.01M16 15h.01"/></svg>',
+        insights: '<svg viewBox="0 0 24 24"><path d="M5 20V11M12 20V4M19 20v-6"/></svg>',
+        done: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>',
+      };
+      function renderNav() {
+        const n = $("nav");
+        n.textContent = "";
+        [
+          ["today", "Today"],
+          ["upcoming", "Upcoming"],
+          ["insights", "Insights"],
+          ["done", "Completed"],
+        ].forEach(([v, l]) => {
+          const b = h("button", "nv");
+          b.innerHTML = ICON[v];
+          b.appendChild(h("span", null, l));
+          b.setAttribute("aria-current", view === v ? "page" : "false");
+          if (v === "today") {
+            const s = stat(todayS()),
+              r = s.p - s.n;
+            if (r > 0) b.appendChild(h("span", "cnt", String(r)));
+          }
+          b.onclick = () => {
+            view = v;
+            off = 0;
+            openForm = null;
+            render();
+          };
+          n.appendChild(b);
+        });
+      }
+      function render() {
+        renderNav();
+        const v = $("view");
+        v.textContent = "";
+        ({ today: vToday, upcoming: vUpcoming, insights: vInsights, done: vDone })[view](v);
+        $("sync").textContent = status;
+        if (openForm)
+          setTimeout(() => {
+            const f = $("ftext");
+            if (f && document.activeElement !== f) {
+              f.focus();
+              f.scrollIntoView({ block: "nearest" });
+            }
+          }, 0);
+      }
+      function newTask() {
+        if (view !== "today" && view !== "upcoming") view = "today";
+        openForm = { date: view === "upcoming" ? addD(todayS(), 1) : todayS() };
+        render();
+      }
+      $("newBtn").onclick = newTask;
+      $("fab").onclick = newTask;
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "q" && !e.ctrlKey && !e.metaKey && !e.altKey && !/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) {
+          e.preventDefault();
+          newTask();
+        }
+      });
+      $("theme").onclick = () => {
+        const r = document.documentElement,
+          dark = r.dataset.theme ? r.dataset.theme === "dark" : matchMedia("(prefers-color-scheme:dark)").matches;
+        r.dataset.theme = dark ? "light" : "dark";
+      };
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) {
+          refresh();
+          pull();
+        }
+      });
+      render();
+      function showAuth(on) {
+        $("auth").hidden = !on;
+        $("app").hidden = on;
+        $("fab").hidden = on;
+      }
+      async function auth(k) {
+        const email = $("em").value.trim(),
+          password = $("pw").value,
+          m = $("amsg");
+        m.textContent = "";
+        if (!email || password.length < 6) {
+          m.textContent = "Enter your email and a password of at least 6 characters.";
+          return;
+        }
+        const r =
+          k === "in"
+            ? await sb.auth.signInWithPassword({ email, password })
+            : await sb.auth.signUp({ email, password });
+        if (r.error) m.textContent = r.error.message;
+        else if (k === "up" && !r.data.session)
+          m.textContent = "Check your email to confirm your account, then sign in.";
+      }
+      $("signin").onclick = () => auth("in");
+      $("signup").onclick = () => auth("up");
+      $("pw").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") auth("in");
+      });
+      $("out").onclick = async () => {
+        if (sb) await sb.auth.signOut();
+      };
+      (async () => {
+        if (!window.supabase || SUPABASE_URL.startsWith("PASTE")) {
+          $("amsg").textContent = "Add your Supabase URL and key at the top of index.html first.";
+          showAuth(true);
+          return;
+        }
+        sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        sb.auth.onAuthStateChange((ev, s) => {
+          const u = s ? s.user : null;
+          if (u) {
+            const first = !user;
+            user = u;
+            showAuth(false);
+            if (first) pull();
+          } else if (user || ev === "SIGNED_OUT") {
+            user = null;
+            S = { items: [], log: {} };
+            try {
+              localStorage.removeItem(K);
+              localStorage.removeItem(K + "-dirty");
+            } catch (e) {}
+            dirty = false;
+            render();
+            showAuth(true);
+          }
+        });
+        const { data } = await sb.auth.getSession();
+        user = data.session ? data.session.user : null;
+        if (user) {
+          showAuth(false);
+          pull();
+        } else showAuth(true);
+        setInterval(pull, 30000);
+      })();
+      if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+    </script>
+  </body>
+</html>
